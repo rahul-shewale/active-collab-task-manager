@@ -181,48 +181,62 @@ const Report = {
     $('#report-loading').removeClass('d-none');
     $('#report-content').addClass('d-none');
 
-    $.when(API.getDueDateStats(), API.getTaskStats())
-      .done((dueRes, statsRes) => {
-        const due   = dueRes[0];
-        const stats = statsRes[0];
+    // Run the two requests independently — historically they were
+    // chained with $.when(), so a 401 on /tasks/stats (the only
+    // auth-protected one) killed the entire page. Now the report
+    // renders even when the stats bar fails.
+    const duePromise   = API.getDueDateStats();
+    const statsPromise = API.getTaskStats();
 
-        // Stats bar
-        $('#stat-open').text(stats.by_status?.open || 0);
-        $('#stat-in_progress').text(stats.by_status?.in_progress || 0);
-        $('#stat-done').text(stats.by_status?.done || 0);
-        $('#stat-overdue').text(due.pending?.length || 0);
-
-        // Sections
+    duePromise
+      .done(due => {
         renderSection('list-pending',  due.pending,  true);
         renderSection('list-today',    due.today,    true);
         renderSection('list-upcoming', due.upcoming, true);
 
-        // Open tasks — show first 20, toggle rest
         const openTasks = due.open || [];
         $('#count-open').text(`${openTasks.length} tasks`);
         let openShown = false;
         const render20 = () => renderSection('list-open', openTasks.slice(0, 20), false);
         const renderAll = () => renderSection('list-open', openTasks, false);
         render20();
-        $('#toggle-open').on('click', function () {
+        $('#toggle-open').off('click.report').on('click.report', function () {
           openShown = !openShown;
           openShown ? renderAll() : render20();
           $(this).text(openShown ? 'Show less' : 'Show all');
         });
 
-        // Counts
-        $('#count-pending').text(`${due.pending.length} tasks`);
-        $('#count-today').text(`${due.today.length} tasks`);
-        $('#count-upcoming').text(`${due.upcoming.length} tasks`);
+        $('#count-pending').text(`${(due.pending  || []).length} tasks`);
+        $('#count-today').text(`${(due.today    || []).length} tasks`);
+        $('#count-upcoming').text(`${(due.upcoming || []).length} tasks`);
+        $('#stat-overdue').text((due.pending || []).length);
 
         $('#report-loading').addClass('d-none');
         $('#report-content').removeClass('d-none');
 
-        // Hubstaff
         loadHubstaff(hsTimeframe);
       })
-      .fail(() => {
-        $('#report-loading').html('<span class="text-danger">Failed to load report data. Please refresh.</span>');
+      .fail(xhr => {
+        const status = xhr.status || '?';
+        $('#report-loading').html(
+          `<span class="text-danger">Failed to load report data (HTTP ${status}). ` +
+          `Please refresh.</span>`
+        );
+      });
+
+    statsPromise
+      .done(stats => {
+        $('#stat-open').text(stats.by_status?.open || 0);
+        $('#stat-in_progress').text(stats.by_status?.in_progress || 0);
+        $('#stat-done').text(stats.by_status?.done || 0);
+      })
+      .fail(xhr => {
+        // 401 just means the user isn't logged in for the stats
+        // endpoint — leave the placeholders and continue rendering
+        // the rest of the report.
+        if (xhr.status !== 401) {
+          $('#stat-open, #stat-in_progress, #stat-done').text('—');
+        }
       });
   },
 };

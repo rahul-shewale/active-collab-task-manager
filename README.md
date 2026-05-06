@@ -148,7 +148,46 @@ server {
 }
 ```
 
-### 5. First Login
+### 5. Database migrations
+
+After importing `task_dashboard_php.sql`, run the idempotent migration script
+to ensure the ActiveCollab persistence tables exist on already-running
+installs:
+
+```bash
+php bin/migrate.php
+```
+
+This creates `ac_users`, `ac_companies`, `ac_projects`, `ac_tasks`, and
+`ac_sync_state` if they're missing. Safe to re-run.
+
+### 6. Cron-driven sync
+
+Every dashboard data source (Trello, Mantis, Hubstaff, **and** ActiveCollab)
+is now refreshed exclusively by a background cron job — the dashboard
+itself only reads from MySQL.
+
+Add this line to the crontab of whatever user can run `php`:
+
+```cron
+*/15 * * * * php /var/www/html/task-manager/bin/cron.php >> /var/www/html/task-manager/storage/cron.log 2>&1
+```
+
+Manual ad-hoc runs:
+
+```bash
+# CLI
+php bin/cron.php
+
+# From the dashboard
+Click the "Sync Data" button in the top navbar.
+# (POST /api/sync/cron — auth-protected, same orchestration as the cron job)
+```
+
+The "Last synced" label next to the Sync Data button is fed by
+`GET /api/sync/status`.
+
+### 7. First Login
 
 Create an admin user directly in the DB:
 
@@ -189,7 +228,8 @@ php -r "echo password_hash('yourpassword', PASSWORD_BCRYPT);"
 | Mantis sync                     | ✅ |
 | Hubstaff sync + token rotation  | ✅ |
 | Sync All + sync logs            | ✅ |
-| Auto-sync every 5 minutes       | ✅ |
+| Cron-driven sync every 15 min   | ✅ |
+| Manual "Sync Data" button       | ✅ |
 | parallel curl_multi requests    | ✅ |
 | Pagination on task list         | ✅ |
 | User CRUD                       | ✅ |
@@ -222,10 +262,40 @@ POST   /api/sync/trello                   [auth]
 POST   /api/sync/mantis                   [auth]
 POST   /api/sync/hubstaff                 [auth]
 POST   /api/sync/all                      [auth]
+POST   /api/sync/cron                     [auth]   # full Trello+Mantis+Hubstaff+AC run
 GET    /api/sync/logs                     [auth]
+GET    /api/sync/status                   [auth]   # last run time, per-source status
 
-GET    /api/active-collab/teams-view      (public)
-GET    /api/active-collab/projects-view   (public)
-GET    /api/active-collab/managers-view   (public)
-GET    /api/active-collab/clients-view    (public)
+GET    /api/active-collab/teams-view      (public, DB-only)
+GET    /api/active-collab/projects-view   (public, DB-only)
+GET    /api/active-collab/managers-view   (public, DB-only)
+GET    /api/active-collab/clients-view    (public, DB-only)
 ```
+
+---
+
+## Data flow
+
+```
+┌──────────────────┐        ┌──────────────────┐        ┌──────────────┐
+│ cron */15 min    │───────▶│ bin/cron.php     │───┐    │ "Sync Data"  │
+└──────────────────┘        └──────────────────┘   │    │ button (UI)  │
+                                                   ▼    └──────┬───────┘
+                                            ┌────────────────┐ │
+                                            │ SyncRunner     │◀┘  POST /api/sync/cron
+                                            │ ::runAll()     │
+                                            └──────┬─────────┘
+                                                   │
+                                ┌──────────────────┼──────────────────┐
+                                ▼                  ▼                  ▼
+                          Trello/Mantis/      AC service      ac_sync_state +
+                          Hubstaff services   syncAll()       integration_logs
+                                │                  │
+                                ▼                  ▼
+                            tasks /          ac_users/companies/
+                            task_user /      projects/tasks +
+                            hubstaff_*       cache_store (4 view blobs)
+
+Browser GET /api/active-collab/* and /api/reports/* read DB only.
+```
+

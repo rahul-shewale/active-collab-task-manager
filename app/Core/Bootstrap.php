@@ -42,6 +42,15 @@ class Bootstrap
         });
 
         // ── Session ───────────────────────────────────────────────────────────
+        // Use a project-local session directory to avoid permission issues on
+        // /var/lib/php/sessions when running via built-in PHP server or custom users.
+        $sessionPath = dirname(__DIR__, 2) . '/storage/sessions';
+        if (!is_dir($sessionPath)) {
+            @mkdir($sessionPath, 0777, true);
+        }
+        if (is_dir($sessionPath) && is_writable($sessionPath)) {
+            ini_set('session.save_path', $sessionPath);
+        }
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }

@@ -44,7 +44,9 @@ $router->post('/sync/trello',   [\App\Controllers\SyncController::class, 'trello
 $router->post('/sync/mantis',   [\App\Controllers\SyncController::class, 'mantis']);
 $router->post('/sync/hubstaff', [\App\Controllers\SyncController::class, 'hubstaff']);
 $router->post('/sync/all',      [\App\Controllers\SyncController::class, 'all']);
+$router->post('/sync/cron',     [\App\Controllers\SyncController::class, 'cron']);
 $router->get('/sync/logs',      [\App\Controllers\SyncController::class, 'logs']);
+$router->get('/sync/status',    [\App\Controllers\SyncController::class, 'status']);
 
 // ── ActiveCollab ──────────────────────────────────────────────────────────────
 $router->get('/active-collab/teams-view',    [\App\Controllers\ActiveCollabController::class, 'teamsView']);

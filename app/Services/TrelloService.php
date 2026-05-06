@@ -138,15 +138,30 @@ class TrelloService
                     DB::update('tasks', $taskData, 'id = ?', [$existing['id']]);
                     $taskId = $existing['id'];
                 } else {
-                    $taskData['external_id'] = $card['id'];
-                    $taskData['created_at']  = date('Y-m-d H:i:s');
+                    // Use explicit positional values — relying on
+                    // $taskData ordering caused 'external_id' and
+                    // 'created_at' to be swapped, which crashed the
+                    // INSERT with "Incorrect datetime value".
+                    $now = date('Y-m-d H:i:s');
                     DB::query(
                         "INSERT INTO tasks (title,status,priority,due_date,source,board_name,list_name,url,external_id,created_at,updated_at)
                          VALUES (?,?,?,?,?,?,?,?,?,?,?)
                          ON DUPLICATE KEY UPDATE title=VALUES(title), status=VALUES(status), priority=VALUES(priority),
                          due_date=VALUES(due_date), board_name=VALUES(board_name), list_name=VALUES(list_name),
                          url=VALUES(url), updated_at=VALUES(updated_at)",
-                        array_values($taskData)
+                        [
+                            $taskData['title'],
+                            $taskData['status'],
+                            $taskData['priority'],
+                            $taskData['due_date'],
+                            $taskData['source'],
+                            $taskData['board_name'],
+                            $taskData['list_name'],
+                            $taskData['url'],
+                            $card['id'],
+                            $now,
+                            $now,
+                        ]
                     );
                     $taskId = (int) DB::lastInsertId();
                 }

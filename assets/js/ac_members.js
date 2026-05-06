@@ -7,6 +7,7 @@ const AcMembers = {
   loaded: false,
   data: [],
   filtered: [],
+  _taskPreviewLimit: 20,
 
   /* ── slider state ───────────────────────────────────────── */
   _sliderIdx:      0,
@@ -41,10 +42,10 @@ const AcMembers = {
   },
 
   render(data) {
-    const search = $('#ac-members-search').val().toLowerCase();
+    const search = ($('#ac-members-search').val() || '').toLowerCase();
     this.filtered = search
-      ? data.filter(g => g.user.name.toLowerCase().includes(search))
-      : data;
+      ? (Array.isArray(data) ? data : []).filter(g => (g?.user?.name || '').toLowerCase().includes(search))
+      : (Array.isArray(data) ? data : []);
 
     const $track = $('#ac-members-track');
     $track.empty();
@@ -58,13 +59,22 @@ const AcMembers = {
 
     /* Build one vertical column card per member */
     this.filtered.forEach((group, idx) => {
-      const u = group.user;
+      const u = group?.user || {};
+      const memberTasks = Array.isArray(group?.tasks) ? group.tasks : [];
 
       const avatarHtml = u.avatar
         ? `<img src="${escHtml(u.avatar)}" class="rounded-circle" width="44" height="44" alt="${escHtml(u.name)}">`
         : `<div class="ac-col-avatar">${escHtml(initials(u.name))}</div>`;
 
-      const taskCards = (group.tasks || []).map(task => acMemberTaskCard(task)).join('');
+      const previewTasks = memberTasks.slice(0, this._taskPreviewLimit);
+      const taskCards = previewTasks.map(task => acMemberTaskCard(task)).join('');
+      const moreBtn = memberTasks.length > this._taskPreviewLimit
+        ? `<button class="btn btn-link btn-sm p-0 mt-2 ac-member-more"
+             data-member-idx="${idx}"
+             data-expanded="0">
+             Show all ${memberTasks.length} tasks
+           </button>`
+        : '';
 
       const col = `
         <div class="ac-member-col" data-col-idx="${idx}">
@@ -72,14 +82,15 @@ const AcMembers = {
           <div class="ac-col-header">
             <div class="ac-col-avatar-wrap">${avatarHtml}</div>
             <div class="ac-col-meta">
-              <div class="ac-col-name">${escHtml(u.name)}</div>
+              <div class="ac-col-name">${escHtml(u.name || 'Unknown')}</div>
               <div class="ac-col-sub">${escHtml(u.email || '')}</div>
             </div>
-            <span class="ac-col-badge">${group.tasks.length}</span>
+            <span class="ac-col-badge">${memberTasks.length}</span>
           </div>
           <!-- Task list -->
-          <div class="ac-col-body">
+          <div class="ac-col-body" data-member-idx="${idx}">
             ${taskCards || '<div class="ac-no-tasks">No open tasks</div>'}
+            ${moreBtn}
           </div>
         </div>`;
 
@@ -228,6 +239,26 @@ function acMemberTaskCard(task) {
 $(document)
   .on('input',  '#ac-members-search',   () => AcMembers.render(AcMembers.data))
   .on('click',  '#ac-members-reload',   () => { delete acCache['ac_teams']; AcMembers.loaded = false; AcMembers.load(true); })
+  .on('click',  '.ac-member-more',      function () {
+    const idx = +$(this).data('member-idx');
+    const expanded = $(this).data('expanded') === 1;
+    const group = AcMembers.filtered[idx];
+    const tasks = Array.isArray(group?.tasks) ? group.tasks : [];
+    const $body = $(`.ac-col-body[data-member-idx="${idx}"]`);
+    if (!$body.length) return;
+
+    if (!expanded) {
+      const cards = tasks.map(task => acMemberTaskCard(task)).join('');
+      $body.html(cards + `<button class="btn btn-link btn-sm p-0 mt-2 ac-member-more" data-member-idx="${idx}" data-expanded="1">Show less</button>`);
+    } else {
+      const preview = tasks.slice(0, AcMembers._taskPreviewLimit).map(task => acMemberTaskCard(task)).join('');
+      const btn = tasks.length > AcMembers._taskPreviewLimit
+        ? `<button class="btn btn-link btn-sm p-0 mt-2 ac-member-more" data-member-idx="${idx}" data-expanded="0">Show all ${tasks.length} tasks</button>`
+        : '';
+      $body.html(preview || '<div class="ac-no-tasks">No open tasks</div>');
+      if (btn) $body.append(btn);
+    }
+  })
   .on('click',  '#ac-slider-prev',      () => { AcMembers._stopSlider(); AcMembers.prev(); })
   .on('click',  '#ac-slider-next',      () => { AcMembers._stopSlider(); AcMembers.next(); })
   .on('click',  '#ac-slider-toggle',    () => AcMembers._toggleSlider())

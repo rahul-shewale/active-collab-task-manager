@@ -65,6 +65,8 @@ const API = {
   syncMantis:   () => apiRequest('POST', '/sync/mantis'),
   syncHubstaff: () => apiRequest('POST', '/sync/hubstaff'),
   syncAll:      () => apiRequest('POST', '/sync/all'),
+  syncCron:     () => apiRequest('POST', '/sync/cron'),
+  syncStatus:   () => apiRequest('GET',  '/sync/status'),
   getSyncLogs:  () => apiRequest('GET',  '/sync/logs'),
 
   // ActiveCollab

@@ -63,11 +63,12 @@ Bootstrap::init();
           <li class="nav-item"><a class="nav-link tab-link" href="#" data-tab="ac-members">👥 AC Members</a></li>
           <li class="nav-item"><a class="nav-link tab-link" href="#" data-tab="ac-projects">📂 AC Projects</a></li>
           <li class="nav-item"><a class="nav-link tab-link" href="#" data-tab="ac-managers">🧑‍💼 AC Managers</a></li>
-          <li class="nav-item"><a class="nav-link tab-link" href="#" data-tab="ac-clients">🏢 AC Clients1111</a></li>
+          <li class="nav-item"><a class="nav-link tab-link" href="#" data-tab="ac-clients">🏢 AC Clients</a></li>
         </ul>
         <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
-          <button id="sync-btn" class="btn btn-light btn-sm fw-semibold">
-            <i class="bi bi-arrow-repeat me-1"></i>Sync
+          <small id="last-synced" class="text-white small opacity-75 d-none d-md-inline" title=""></small>
+          <button id="sync-btn" class="btn btn-light btn-sm fw-semibold" title="Run cron sync now">
+            <i class="bi bi-arrow-repeat me-1"></i>Sync Data
           </button>
           <span id="nav-user" class="text-white small opacity-75"></span>
           <button id="logout-btn" class="btn btn-outline-light btn-sm">Logout</button>
