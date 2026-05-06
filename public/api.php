@@ -54,5 +54,9 @@ $router->get('/active-collab/projects-view', [\App\Controllers\ActiveCollabContr
 $router->get('/active-collab/managers-view', [\App\Controllers\ActiveCollabController::class, 'managersView']);
 $router->get('/active-collab/clients-view',  [\App\Controllers\ActiveCollabController::class, 'clientsView']);
 
+// ── Pending sliders (Trello + ActiveCollab) ───────────────────────────────────
+$router->get('/pending/trello',        [\App\Controllers\PendingController::class, 'trello']);
+$router->get('/pending/active-collab', [\App\Controllers\PendingController::class, 'activeCollab']);
+
 // ── Dispatch ──────────────────────────────────────────────────────────────────
 $router->dispatch(new Request());

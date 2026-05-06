@@ -1,6 +1,10 @@
 /**
  * assets/js/app.js
- * Handles auth state, tab routing, sync button, 5-min auto-sync.
+ * Auth state, tab routing, "Sync Data" button, last-synced indicator.
+ *
+ * The browser no longer triggers periodic syncs — that's now the
+ * cron job's responsibility (bin/cron.php). The Sync Data button
+ * manually invokes the same SyncRunner via POST /api/sync/cron.
  */
 
 /* ── helpers ──────────────────────────────────────────────── */
@@ -38,6 +42,30 @@ function acFetch(key, apiFn, force = false) {
   return apiFn().done(d => { acCache[key] = d; });
 }
 
+/* ── Last-synced label helpers ────────────────────────────── */
+function fmtRelative(timestamp) {
+  if (!timestamp) return 'never';
+  const then = new Date(timestamp.replace(' ', 'T'));
+  const diff = Math.max(0, (Date.now() - then.getTime()) / 1000);
+  if (diff < 60)        return 'just now';
+  if (diff < 3600)      return Math.floor(diff / 60)   + ' min ago';
+  if (diff < 86400)     return Math.floor(diff / 3600) + ' h ago';
+  return then.toLocaleString();
+}
+
+function refreshSyncStatus() {
+  return API.syncStatus()
+    .done(s => {
+      const label = s.last_run_at
+        ? `Last synced: ${fmtRelative(s.last_run_at)}`
+        : 'Not synced yet';
+      $('#last-synced').text(label).attr('title', s.last_run_at || '');
+    })
+    .fail(() => {
+      $('#last-synced').text('');
+    });
+}
+
 /* ── App namespace ────────────────────────────────────────── */
 const App = {
   currentTab: 'report',
@@ -51,7 +79,7 @@ const App = {
       const user = JSON.parse(localStorage.getItem('auth_user') || '{}');
       $('#nav-user').text(user.name || '');
       this.showTab('report');
-      this.startAutoSync();
+      refreshSyncStatus();
     }
   },
 
@@ -65,6 +93,7 @@ const App = {
     // Lazy-load each tab on first activation
     const loaders = {
       'report':       () => Report.load(),
+      'pending':      () => Pending.load(),
       'ac-members':   () => AcMembers.load(),
       'ac-projects':  () => AcProjects.load(),
       'ac-managers':  () => AcManagers.load(),
@@ -73,17 +102,16 @@ const App = {
     if (loaders[tab]) loaders[tab]();
   },
 
-  startAutoSync() {
-    clearInterval(this._syncInterval);
-    this._syncInterval = setInterval(() => {
-      API.syncTrello()
-        .then(() => API.syncHubstaff())
-        .then(() => {
-          Report.load(true);
-          showToast('Auto-synced ✓', 'bg-success');
-        })
-        .catch(() => {});
-    }, 5 * 60 * 1000);
+  reloadCurrentTab() {
+    Object.keys(acCache).forEach(k => delete acCache[k]);
+    const reloaders = {
+      'report':       () => Report.load(true),
+      'ac-members':   () => { AcMembers.loaded = false; AcMembers.load(true); },
+      'ac-projects':  () => { AcProjects.loaded = false; AcProjects.load(true); },
+      'ac-managers':  () => { AcManagers.loaded = false; AcManagers.load(true); },
+      'ac-clients':   () => { AcClients.loaded  = false; AcClients.load(true); },
+    };
+    (reloaders[this.currentTab] || (() => {}))();
   },
 };
 
@@ -141,22 +169,34 @@ $(function () {
     });
   });
 
-  /* ── Manual sync ─────────────────────────────────────────── */
+  /* ── Manual cron trigger (Sync Data button) ──────────────── */
   $('#sync-btn').on('click', function () {
-    $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Syncing…');
-    showToast('Syncing all sources…', 'bg-primary');
+    const $btn = $(this);
+    $btn.prop('disabled', true)
+        .html('<span class="spinner-border spinner-border-sm me-1"></span>Syncing…');
+    showToast('Running sync — this can take up to a minute…', 'bg-primary');
 
-    API.syncAll()
-      .done(function (data) {
-        const t = (data.trello?.synced || 0) + (data.mantis?.synced || 0);
-        showToast(`Sync complete — ${t} tasks`, 'bg-success');
-        if (App.currentTab === 'report') Report.load(true);
+    API.syncCron()
+      .done(function (summary) {
+        const t  = summary.trello?.synced   || 0;
+        const m  = summary.mantis?.synced   || 0;
+        const h  = summary.hubstaff?.synced || 0;
+        const a  = summary.ac?.synced       || 0;
+        const ok = summary.status === 'success';
+        showToast(
+          `Sync ${ok ? 'complete' : 'finished with issues'} — Trello ${t}, Mantis ${m}, Hubstaff ${h}, AC ${a}`,
+          ok ? 'bg-success' : 'bg-warning'
+        );
+        refreshSyncStatus();
+        App.reloadCurrentTab();
       })
-      .fail(function () {
-        showToast('Sync failed', 'bg-danger');
+      .fail(function (xhr) {
+        const msg = xhr.responseJSON?.message || 'Sync failed';
+        showToast(msg, 'bg-danger');
       })
       .always(function () {
-        $('#sync-btn').prop('disabled', false).html('<i class="bi bi-arrow-repeat me-1"></i>Sync');
+        $btn.prop('disabled', false)
+            .html('<i class="bi bi-arrow-repeat me-1"></i>Sync Data');
       });
   });
 

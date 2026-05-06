@@ -65,6 +65,8 @@ const API = {
   syncMantis:   () => apiRequest('POST', '/sync/mantis'),
   syncHubstaff: () => apiRequest('POST', '/sync/hubstaff'),
   syncAll:      () => apiRequest('POST', '/sync/all'),
+  syncCron:     () => apiRequest('POST', '/sync/cron'),
+  syncStatus:   () => apiRequest('GET',  '/sync/status'),
   getSyncLogs:  () => apiRequest('GET',  '/sync/logs'),
 
   // ActiveCollab
@@ -72,4 +74,8 @@ const API = {
   acProjects: () => apiRequest('GET', '/active-collab/projects-view'),
   acManagers: () => apiRequest('GET', '/active-collab/managers-view'),
   acClients:  () => apiRequest('GET', '/active-collab/clients-view'),
+
+  // Pending sliders
+  pendingTrello: () => apiRequest('GET', '/pending/trello'),
+  pendingAc:     () => apiRequest('GET', '/pending/active-collab'),
 };

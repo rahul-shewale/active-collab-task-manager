@@ -42,49 +42,86 @@
 
 <div id="report-content" class="d-none">
 
-  <!-- OVERDUE -->
-  <div class="mb-4" id="section-pending">
-    <div class="d-flex align-items-center gap-2 mb-2">
-      <span class="badge bg-danger fs-6">⚠ Overdue</span>
-      <span class="text-muted small" id="count-pending"></span>
+  <!-- Trello Cards header -->
+  <div class="report-topbar mb-3">
+    <div class="report-top-left">
+      <span class="report-top-icon">🗂</span>
+      <span class="report-top-title">Trello Cards</span>
+      <span class="report-top-pill" id="trello-total">—</span>
     </div>
-    <div id="list-pending"></div>
+    <div class="report-top-right">
+      <span class="report-chip is-neutral" id="chip-no-deadline">— without deadline</span>
+      <div class="report-chip-row" id="report-board-chips"></div>
+    </div>
   </div>
 
-  <!-- TODAY -->
-  <div class="mb-4" id="section-today">
-    <div class="d-flex align-items-center gap-2 mb-2">
-      <span class="badge bg-warning text-dark fs-6">🗓 Due Today</span>
-      <span class="text-muted small" id="count-today"></span>
+  <!-- Main 3 panels -->
+  <div class="row g-3 mb-3">
+    <div class="col-12 col-lg-4">
+      <div class="report-panel is-danger" id="section-pending">
+        <div class="report-panel-head">
+          <div class="report-panel-title">
+            <span class="report-panel-icon">⚠</span>
+            <span>Overdue</span>
+          </div>
+          <span class="report-panel-count" id="count-pending"></span>
+        </div>
+        <div class="report-panel-body" id="list-pending"></div>
+      </div>
     </div>
-    <div id="list-today"></div>
+
+    <div class="col-12 col-lg-4">
+      <div class="report-panel is-warning" id="section-today">
+        <div class="report-panel-head">
+          <div class="report-panel-title">
+            <span class="report-panel-icon">📅</span>
+            <span>Today</span>
+          </div>
+          <span class="report-panel-count" id="count-today"></span>
+        </div>
+        <div class="report-panel-body" id="list-today"></div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+      <div class="report-panel is-info" id="section-upcoming">
+        <div class="report-panel-head">
+          <div class="report-panel-title">
+            <span class="report-panel-icon">🧾</span>
+            <span>Upcoming</span>
+          </div>
+          <span class="report-panel-count" id="count-upcoming"></span>
+        </div>
+        <div class="report-panel-body" id="list-upcoming"></div>
+      </div>
+    </div>
   </div>
 
-  <!-- UPCOMING -->
-  <div class="mb-4" id="section-upcoming">
-    <div class="d-flex align-items-center gap-2 mb-2">
-      <span class="badge bg-info text-dark fs-6">📅 Upcoming</span>
-      <span class="text-muted small" id="count-upcoming"></span>
+  <!-- No deadline (open) -->
+  <div class="report-panel is-neutral mb-3" id="section-open">
+    <div class="report-panel-head">
+      <div class="report-panel-title">
+        <span class="report-panel-icon">🗒</span>
+        <span>No deadline</span>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="report-panel-count" id="count-open"></span>
+        <button class="btn btn-link btn-sm text-muted p-0" id="toggle-open">Show all</button>
+      </div>
     </div>
-    <div id="list-upcoming"></div>
+    <div class="report-panel-body" id="list-open"></div>
   </div>
 
-  <!-- NO DUE DATE -->
-  <div class="mb-4" id="section-open">
-    <div class="d-flex align-items-center gap-2 mb-2">
-      <span class="badge bg-secondary fs-6">📋 No Due Date</span>
-      <span class="text-muted small" id="count-open"></span>
-      <button class="btn btn-link btn-sm text-muted p-0 ms-1" id="toggle-open">Show all</button>
-    </div>
-    <div id="list-open"></div>
-  </div>
-
-  <!-- HUBSTAFF -->
-  <div class="mb-4">
-    <div class="d-flex align-items-center gap-2 mb-3">
-      <span class="badge bg-purple fs-6" style="background:#7c3aed;">⏱ Hubstaff Time Tracking</span>
+  <!-- Hubstaff -->
+  <div class="report-panel is-purple mb-4">
+    <div class="report-panel-head">
+      <div class="report-panel-title">
+        <span class="report-panel-icon">⏱</span>
+        <span>Hubstaff Activity</span>
+        <span class="report-top-pill ms-2">Time tracking</span>
+      </div>
       <div class="btn-group btn-group-sm" id="hs-timeframe-group">
-        <button class="btn btn-outline-secondary active" data-tf="day">Today</button>
+        <button class="btn btn-outline-secondary active" data-tf="day">Day</button>
         <button class="btn btn-outline-secondary" data-tf="week">Week</button>
         <button class="btn btn-outline-secondary" data-tf="month">Month</button>
       </div>
@@ -92,7 +129,7 @@
     <div id="hubstaff-loading" class="text-center py-3 text-muted">
       <div class="spinner-border spinner-border-sm text-primary me-2"></div>Loading tracking data…
     </div>
-    <div id="hubstaff-cards" class="row g-3 d-none"></div>
+    <div id="hubstaff-cards" class="row g-3 d-none px-2 pb-2"></div>
   </div>
 
 </div>

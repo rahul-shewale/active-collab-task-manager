@@ -60,6 +60,7 @@ Bootstrap::init();
       <div class="collapse navbar-collapse" id="nav-tabs">
         <ul class="navbar-nav me-auto gap-1 mt-2 mt-lg-0" id="main-tabs">
           <li class="nav-item"><a class="nav-link tab-link active" href="#" data-tab="report">📊 Task Report</a></li>
+          <li class="nav-item"><a class="nav-link tab-link" href="#" data-tab="pending">🧭 Pending Sliders</a></li>
           <li class="nav-item"><a class="nav-link tab-link" href="#" data-tab="ac-members">👥 AC Members</a></li>
           <li class="nav-item"><a class="nav-link tab-link" href="#" data-tab="ac-projects">📂 AC Projects</a></li>
           <li class="nav-item"><a class="nav-link tab-link" href="#" data-tab="ac-managers">🧑‍💼 AC Managers</a></li>
@@ -83,6 +84,11 @@ Bootstrap::init();
     <!-- REPORT TAB -->
     <div class="tab-panel" id="panel-report">
       <?php include __DIR__ . '/../views/report.php'; ?>
+    </div>
+
+    <!-- PENDING SLIDERS TAB -->
+    <div class="tab-panel d-none" id="panel-pending">
+      <?php include __DIR__ . '/../views/pending.php'; ?>
     </div>
 
     <!-- AC MEMBERS TAB -->
@@ -136,6 +142,7 @@ Bootstrap::init();
 <script src="/assets/js/api.js"></script>
 <script src="/assets/js/ac_shared.js"></script>
 <script src="/assets/js/report.js"></script>
+<script src="/assets/js/pending.js"></script>
 <script src="/assets/js/ac_members.js"></script>
 <script src="/assets/js/ac_projects.js"></script>
 <script src="/assets/js/ac_managers.js"></script>

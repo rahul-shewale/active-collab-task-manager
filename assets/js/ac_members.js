@@ -57,8 +57,11 @@ const AcMembers = {
       return;
     }
 
+    let renderedCols = 0;
+
     /* Build one vertical column card per member */
     this.filtered.forEach((group, idx) => {
+      try {
       const u = group?.user || {};
       const memberTasks = Array.isArray(group?.tasks) ? group.tasks : [];
 
@@ -95,12 +98,21 @@ const AcMembers = {
         </div>`;
 
       $track.append(col);
+      renderedCols++;
 
       /* Dot indicator */
       $('#ac-slider-dots').append(
         `<button class="ac-dot${idx === 0 ? ' active' : ''}" data-dot="${idx}" title="${escHtml(u.name)}"></button>`
       );
+      } catch (e) {
+        $('#ac-members-error').text(`Skipped one invalid member row: ${e?.message || 'unknown error'}`).removeClass('d-none');
+      }
     });
+
+    if (renderedCols === 0) {
+      $track.html('<div class="text-muted py-4 text-center">No member cards could be rendered from API data.</div>');
+      return;
+    }
 
     this._sliderIdx = 0;
     this._visibleCount = this._calcVisible();
@@ -194,8 +206,14 @@ const AcMembers = {
 /* ── Task card renderer (compact, Trello-style) ─────────── */
 function acMemberTaskCard(task) {
   const today   = new Date(); today.setHours(0,0,0,0);
-  const dueDate = task.due_date ? new Date(task.due_date) : null;
-  if (dueDate) dueDate.setHours(0,0,0,0);
+  let dueDate = null;
+  if (task.due_date) {
+    const parsed = new Date(task.due_date);
+    if (!Number.isNaN(parsed.getTime())) {
+      parsed.setHours(0,0,0,0);
+      dueDate = parsed;
+    }
+  }
   const isOverdue = dueDate && dueDate < today && task.status !== 'done';
   const isToday   = dueDate && dueDate.getTime() === today.getTime();
 
@@ -218,21 +236,25 @@ function acMemberTaskCard(task) {
     ? `<a href="${escHtml(task.url)}" target="_blank" rel="noopener" class="ac-card-link" title="Open in ActiveCollab">↗</a>`
     : '';
 
-  return `
-    <div class="ac-task-item ${task.status === 'done' ? 'ac-task-done' : ''}">
-      <div class="ac-task-item-top">
-        <span class="ac-task-item-title">${escHtml(task.title)}</span>
-        ${openBtn}
-      </div>
-      <div class="ac-task-item-meta">
-        <span class="ac-status-pill ${statusCls[task.status] || 'status-open'}">${statusLabel[task.status] || task.status}</span>
-        <span class="ac-prio-pill ${prio.cls}">${prio.icon} ${prio.label}</span>
-        ${dueStr ? `<span class="ac-due-pill ${isOverdue ? 'due-overdue' : isToday ? 'due-today' : 'due-ok'}">
-          ${isOverdue ? '⚠' : '🗓'} ${dueStr}
-        </span>` : ''}
-      </div>
-      ${task.board_name ? `<div class="ac-task-item-board">${escHtml(task.board_name)}</div>` : ''}
-    </div>`;
+  try {
+    return `
+      <div class="ac-task-item ${task.status === 'done' ? 'ac-task-done' : ''}">
+        <div class="ac-task-item-top">
+          <span class="ac-task-item-title">${escHtml(task.title)}</span>
+          ${openBtn}
+        </div>
+        <div class="ac-task-item-meta">
+          <span class="ac-status-pill ${statusCls[task.status] || 'status-open'}">${statusLabel[task.status] || task.status}</span>
+          <span class="ac-prio-pill ${prio.cls}">${prio.icon} ${prio.label}</span>
+          ${dueStr ? `<span class="ac-due-pill ${isOverdue ? 'due-overdue' : isToday ? 'due-today' : 'due-ok'}">
+            ${isOverdue ? '⚠' : '🗓'} ${dueStr}
+          </span>` : ''}
+        </div>
+        ${task.board_name ? `<div class="ac-task-item-board">${escHtml(task.board_name)}</div>` : ''}
+      </div>`;
+  } catch (e) {
+    return `<div class="ac-task-item"><div class="ac-task-item-title">${escHtml(task?.title || 'Task')}</div></div>`;
+  }
 }
 
 /* ── Event bindings ─────────────────────────────────────── */

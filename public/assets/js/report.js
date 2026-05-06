@@ -81,7 +81,15 @@ function groupByBoard(tasks) {
 }
 
 function renderSection(listId, tasks, showDue = true) {
-  if (!tasks.length) { $(`#${listId}`).html('<p class="text-muted small ps-2">None</p>'); return; }
+  if (!tasks.length) {
+    const allClear = (listId === 'list-today' || listId === 'list-upcoming');
+    $(`#${listId}`).html(
+      allClear
+        ? '<div class="report-empty"><div class="report-empty-icon">✅</div><div class="report-empty-text">All clear!</div></div>'
+        : '<div class="report-empty"><div class="report-empty-text text-muted">None</div></div>'
+    );
+    return;
+  }
   const groups = groupByBoard(tasks);
   let html = '';
   groups.forEach(([board, bTasks]) => {
@@ -103,6 +111,28 @@ function renderSection(listId, tasks, showDue = true) {
 
 function escHtml(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderBoardChips(allTasks, openTasks) {
+  const boardCounts = {};
+  (allTasks || []).forEach(t => {
+    const b = shortBoard(t.board_name);
+    boardCounts[b] = (boardCounts[b] || 0) + 1;
+  });
+
+  const entries = Object.entries(boardCounts).sort((a,b) => b[1] - a[1]);
+  const html = entries.map(([board, c]) => {
+    const pal = BOARD_PALETTE[board] || DEFAULT_PAL;
+    return `<span class="report-chip" style="background:${pal.bg};border-color:${pal.border};color:${pal.text}">
+      ${escHtml(board)} <strong class="ms-1" style="color:${pal.text}">${c}</strong>
+    </span>`;
+  }).join('');
+
+  $('#report-board-chips').html(html);
+
+  const noDeadline = (openTasks || []).length;
+  $('#chip-no-deadline').text(`${noDeadline} without deadline`);
+  $('#trello-total').text((allTasks || []).length);
 }
 
 /* ── Hubstaff cards ───────────────────────────────────────── */
@@ -181,48 +211,66 @@ const Report = {
     $('#report-loading').removeClass('d-none');
     $('#report-content').addClass('d-none');
 
-    $.when(API.getDueDateStats(), API.getTaskStats())
-      .done((dueRes, statsRes) => {
-        const due   = dueRes[0];
-        const stats = statsRes[0];
+    // Run the two requests independently — historically they were
+    // chained with $.when(), so a 401 on /tasks/stats (the only
+    // auth-protected one) killed the entire page. Now the report
+    // renders even when the stats bar fails.
+    const duePromise   = API.getDueDateStats();
+    const statsPromise = API.getTaskStats();
 
-        // Stats bar
-        $('#stat-open').text(stats.by_status?.open || 0);
-        $('#stat-in_progress').text(stats.by_status?.in_progress || 0);
-        $('#stat-done').text(stats.by_status?.done || 0);
-        $('#stat-overdue').text(due.pending?.length || 0);
+    duePromise
+      .done(due => {
+        const pending  = due.pending  || [];
+        const todayArr = due.today    || [];
+        const upcoming = due.upcoming || [];
+        const openTasks = due.open || [];
 
-        // Sections
         renderSection('list-pending',  due.pending,  true);
         renderSection('list-today',    due.today,    true);
         renderSection('list-upcoming', due.upcoming, true);
 
-        // Open tasks — show first 20, toggle rest
-        const openTasks = due.open || [];
+        const all = [...pending, ...todayArr, ...upcoming, ...openTasks];
+        renderBoardChips(all, openTasks);
+
         $('#count-open').text(`${openTasks.length} tasks`);
         let openShown = false;
         const render20 = () => renderSection('list-open', openTasks.slice(0, 20), false);
         const renderAll = () => renderSection('list-open', openTasks, false);
         render20();
-        $('#toggle-open').on('click', function () {
+        $('#toggle-open').off('click.report').on('click.report', function () {
           openShown = !openShown;
           openShown ? renderAll() : render20();
           $(this).text(openShown ? 'Show less' : 'Show all');
         });
 
-        // Counts
-        $('#count-pending').text(`${due.pending.length} tasks`);
-        $('#count-today').text(`${due.today.length} tasks`);
-        $('#count-upcoming').text(`${due.upcoming.length} tasks`);
+        $('#count-pending').text(`${pending.length} tasks`);
+        $('#count-today').text(`${todayArr.length} tasks`);
+        $('#count-upcoming').text(`${upcoming.length} tasks`);
+        $('#stat-overdue').text(pending.length);
 
         $('#report-loading').addClass('d-none');
         $('#report-content').removeClass('d-none');
 
-        // Hubstaff
         loadHubstaff(hsTimeframe);
       })
-      .fail(() => {
-        $('#report-loading').html('<span class="text-danger">Failed to load report data. Please refresh.</span>');
+      .fail(xhr => {
+        const status = xhr.status || '?';
+        $('#report-loading').html(
+          `<span class="text-danger">Failed to load report data (HTTP ${status}). ` +
+          `Please refresh.</span>`
+        );
+      });
+
+    statsPromise
+      .done(stats => {
+        $('#stat-open').text(stats.by_status?.open || 0);
+        $('#stat-in_progress').text(stats.by_status?.in_progress || 0);
+        $('#stat-done').text(stats.by_status?.done || 0);
+      })
+      .fail(xhr => {
+        if (xhr.status !== 401) {
+          $('#stat-open, #stat-in_progress, #stat-done').text('—');
+        }
       });
   },
 };
