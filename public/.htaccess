@@ -1,0 +1,32 @@
+Options -Indexes
+Options +FollowSymLinks
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Allow direct access to real files (CSS, JS, images)
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Route all /api/* requests to api.php
+    RewriteRule ^api/(.*)$ api.php [L,QSA]
+
+    # Everything else → index.php (SPA shell)
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# PHP settings (override as needed)
+<IfModule mod_php.c>
+    php_value upload_max_filesize 16M
+    php_value post_max_size 16M
+    php_value memory_limit 256M
+    php_value max_execution_time 60
+</IfModule>

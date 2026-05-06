@@ -1,0 +1,19 @@
+# ─── Secrets & credentials ───────────────────────────────────────────────────
+config.php
+ 
+# ─── Dependencies ────────────────────────────────────────────────────────────
+vendor/
+node_modules/
+ 
+# ─── Runtime / cache ─────────────────────────────────────────────────────────
+storage/logs/
+storage/cache/
+storage/hubstaff_*.txt
+*.log
+ 
+# ─── OS / editor junk ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

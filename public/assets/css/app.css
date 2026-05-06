@@ -1,0 +1,266 @@
+/* ─── assets/css/app.css ─────────────────────────────────────────────────── */
+
+/* ── Root / Reset ────────────────────────────────────────── */
+:root {
+  --accent:       #6366f1;
+  --accent-dark:  #4f46e5;
+  --accent-soft:  #eef2ff;
+  --text-primary: #1e293b;
+  --text-muted:   #64748b;
+  --surface:      #ffffff;
+  --border:       #e2e8f0;
+  --radius:       0.75rem;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--text-primary);
+  background: #f1f5f9;
+}
+
+/* ── Navbar tabs ─────────────────────────────────────────── */
+.navbar .nav-link {
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.35rem 0.8rem;
+  transition: background 0.15s;
+}
+
+.navbar .nav-link:hover {
+  background: rgba(255,255,255,.15);
+}
+
+.navbar .nav-link.active {
+  background: rgba(255,255,255,.25);
+  font-weight: 700;
+}
+
+/* ── Stat cards ──────────────────────────────────────────── */
+.stat-card {
+  border-left: 4px solid var(--accent) !important;
+  transition: transform .15s, box-shadow .15s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.08) !important;
+}
+
+/* ── Board group ─────────────────────────────────────────── */
+.board-group {
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+
+.board-group-header {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .6rem 1rem;
+  font-size: .85rem;
+}
+
+.board-group-body { padding: 0; }
+
+/* ── Task row ────────────────────────────────────────────── */
+.task-row {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  padding: .6rem 1rem .6rem 1.25rem;
+  border-top: 1px solid #f1f5f9;
+  background: #fff;
+  transition: background .1s;
+}
+
+.task-row:hover { background: #f8fafc; }
+
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  flex-wrap: wrap;
+}
+
+.task-title {
+  font-size: .82rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.4;
+}
+
+.task-footer {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.task-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem;
+}
+
+/* ── Badges & chips ──────────────────────────────────────── */
+.board-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.board-label {
+  font-size: .65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid;
+  letter-spacing: .03em;
+}
+
+.list-name {
+  font-size: .65rem;
+  color: var(--text-muted);
+}
+
+.due-badge {
+  display: inline-block;
+  font-size: .65rem;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 2px 7px;
+  border: 1px solid;
+}
+
+.due-badge.badge-overdue {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.due-badge.badge-ok {
+  background: #f0fdf4;
+  color: #16a34a;
+  border-color: #86efac;
+}
+
+.due-badge.badge-neutral {
+  background: #f8fafc;
+  color: #94a3b8;
+  border-color: #e2e8f0;
+}
+
+.member-chip {
+  display: inline-block;
+  font-size: .65rem;
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* ── Trello open button ───────────────────────────────────── */
+.btn-trello {
+  background: linear-gradient(135deg,#0052cc,#0065ff);
+  color: #fff !important;
+  font-weight: 700;
+  font-size: .7rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(0,82,204,.3);
+  white-space: nowrap;
+  border: none;
+}
+
+.btn-trello:hover { filter: brightness(1.12); }
+
+/* ── Hubstaff cards ──────────────────────────────────────── */
+.hs-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #fff;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* ── AC task cards ───────────────────────────────────────── */
+.ac-task-card {
+  transition: transform .12s, box-shadow .12s;
+}
+
+.ac-task-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,.1) !important;
+}
+
+.ac-task-title {
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.opacity-60 { opacity: .6; }
+
+/* ── AC avatars ──────────────────────────────────────────── */
+.ac-avatar-wrap {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.ac-avatar-initial {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.ac-manager-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #fff;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+/* ── Login page ──────────────────────────────────────────── */
+#login-page .card {
+  border: none;
+}
+
+/* ── Responsive tweaks ───────────────────────────────────── */
+@media (max-width: 576px) {
+  .stat-card .card-body { padding: .6rem .8rem; }
+  .board-group-header { padding: .5rem .75rem; }
+  .task-row { padding: .5rem .75rem .5rem 1rem; }
+}
+
+/* ── Utility ─────────────────────────────────────────────── */
+.stretched-link-manual {
+  position: relative;
+  z-index: 1;
+}
+
+.min-vh-100 { min-height: 100vh; }

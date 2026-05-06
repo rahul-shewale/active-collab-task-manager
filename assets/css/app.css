@@ -1,0 +1,613 @@
+/* ─── assets/css/app.css ─────────────────────────────────────────────────── */
+
+/* ── Root / Reset ────────────────────────────────────────── */
+:root {
+  --accent: #6366f1;
+  --accent-dark: #4f46e5;
+  --accent-soft: #eef2ff;
+  --text-primary: #1e293b;
+  --text-muted: #64748b;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --radius: 0.75rem;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--text-primary);
+  background: #f1f5f9;
+}
+
+/* ── Navbar tabs ─────────────────────────────────────────── */
+.navbar .nav-link {
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.35rem 0.8rem;
+  transition: background 0.15s;
+}
+
+.navbar .nav-link:hover {
+  background: rgba(255, 255, 255, .15);
+}
+
+.navbar .nav-link.active {
+  background: rgba(255, 255, 255, .25);
+  font-weight: 700;
+}
+
+/* ── Stat cards ──────────────────────────────────────────── */
+.stat-card {
+  border-left: 4px solid var(--accent) !important;
+  transition: transform .15s, box-shadow .15s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .08) !important;
+}
+
+/* ── Board group ─────────────────────────────────────────── */
+.board-group {
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .06);
+}
+
+.board-group-header {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .6rem 1rem;
+  font-size: .85rem;
+}
+
+.board-group-body {
+  padding: 0;
+}
+
+/* ── Task row ────────────────────────────────────────────── */
+.task-row {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  padding: .6rem 1rem .6rem 1.25rem;
+  border-top: 1px solid #f1f5f9;
+  background: #fff;
+  transition: background .1s;
+}
+
+.task-row:hover {
+  background: #f8fafc;
+}
+
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  flex-wrap: wrap;
+}
+
+.task-title {
+  font-size: .82rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.4;
+}
+
+.task-footer {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.task-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem;
+}
+
+/* ── Badges & chips ──────────────────────────────────────── */
+.board-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.board-label {
+  font-size: .65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid;
+  letter-spacing: .03em;
+}
+
+.list-name {
+  font-size: .65rem;
+  color: var(--text-muted);
+}
+
+.due-badge {
+  display: inline-block;
+  font-size: .65rem;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 2px 7px;
+  border: 1px solid;
+}
+
+.due-badge.badge-overdue {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.due-badge.badge-ok {
+  background: #f0fdf4;
+  color: #16a34a;
+  border-color: #86efac;
+}
+
+.due-badge.badge-neutral {
+  background: #f8fafc;
+  color: #94a3b8;
+  border-color: #e2e8f0;
+}
+
+.member-chip {
+  display: inline-block;
+  font-size: .65rem;
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* ── Trello open button ───────────────────────────────────── */
+.btn-trello {
+  background: linear-gradient(135deg, #0052cc, #0065ff);
+  color: #fff !important;
+  font-weight: 700;
+  font-size: .7rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(0, 82, 204, .3);
+  white-space: nowrap;
+  border: none;
+}
+
+.btn-trello:hover {
+  filter: brightness(1.12);
+}
+
+/* ── Hubstaff cards ──────────────────────────────────────── */
+.hs-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #fff;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* ── AC task cards ───────────────────────────────────────── */
+.ac-task-card {
+  transition: transform .12s, box-shadow .12s;
+}
+
+.ac-task-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .1) !important;
+}
+
+.ac-task-title {
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.opacity-60 {
+  opacity: .6;
+}
+
+/* ── AC avatars ──────────────────────────────────────────── */
+.ac-avatar-wrap {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.ac-avatar-initial {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.ac-manager-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #fff;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+/* ── Login page ──────────────────────────────────────────── */
+#login-page .card {
+  border: none;
+}
+
+/* ── Responsive tweaks ───────────────────────────────────── */
+@media (max-width: 576px) {
+  .stat-card .card-body {
+    padding: .6rem .8rem;
+  }
+
+  .board-group-header {
+    padding: .5rem .75rem;
+  }
+
+  .task-row {
+    padding: .5rem .75rem .5rem 1rem;
+  }
+}
+
+/* ── Utility ─────────────────────────────────────────────── */
+.stretched-link-manual {
+  position: relative;
+  z-index: 1;
+}
+
+.min-vh-100 {
+  min-height: 100vh;
+}
+
+/* ════════════════════════════════════════════════════════════
+   AC MEMBERS — Trello-like column slider
+   ════════════════════════════════════════════════════════════ */
+
+/* Outer viewport — clips overflow */
+.ac-slider-wrap {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+/* Scrolling track — all columns sit in one flex row */
+.ac-slider-track {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  /* gap handled via padding inside columns */
+  will-change: transform;
+}
+
+/* ── Individual member column ───────────────────────────── */
+.ac-member-col {
+  flex: 0 0 33.3333%;
+  /* default 3-up; overridden by JS */
+  padding: 0 6px;
+  box-sizing: border-box;
+}
+
+.ac-col-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+  border-radius: 12px 12px 0 0;
+  padding: 12px 14px;
+}
+
+.ac-col-avatar-wrap {
+  flex-shrink: 0;
+}
+
+.ac-col-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .25);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+  border: 2px solid rgba(255, 255, 255, .4);
+}
+
+.ac-col-avatar-wrap img {
+  border: 2px solid rgba(255, 255, 255, .5);
+  border-radius: 50%;
+}
+
+.ac-col-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.ac-col-name {
+  font-weight: 700;
+  font-size: .9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ac-col-sub {
+  font-size: .7rem;
+  opacity: .75;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ac-col-badge {
+  background: rgba(255, 255, 255, .25);
+  border: 1px solid rgba(255, 255, 255, .4);
+  color: #fff;
+  font-weight: 700;
+  font-size: .78rem;
+  padding: 2px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Column body — scrollable task list ─────────────────── */
+.ac-col-body {
+  background: #f1f5f9;
+  border-radius: 0 0 12px 12px;
+  padding: 8px;
+  min-height: 200px;
+  max-height: calc(100vh - 260px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.ac-col-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.ac-col-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.ac-no-tasks {
+  color: #94a3b8;
+  font-size: .8rem;
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* ── Task card (inside column) ──────────────────────────── */
+.ac-task-item {
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px 11px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .07);
+  transition: transform .12s, box-shadow .12s;
+  border-left: 3px solid #6366f1;
+  cursor: default;
+}
+
+.ac-task-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
+}
+
+.ac-task-done {
+  opacity: .55;
+  border-left-color: #10b981;
+}
+
+.ac-task-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.ac-task-item-title {
+  font-size: .8rem;
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.ac-card-link {
+  font-size: .8rem;
+  color: #6366f1;
+  text-decoration: none;
+  font-weight: 700;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.ac-card-link:hover {
+  color: #4f46e5;
+}
+
+.ac-task-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.ac-task-item-board {
+  font-size: .68rem;
+  color: #64748b;
+  margin-top: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Status pills ───────────────────────────────────────── */
+.ac-status-pill {
+  font-size: .65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  text-transform: capitalize;
+}
+
+.status-open {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.status-wip {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.status-done {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.status-hold {
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+/* ── Priority pills ─────────────────────────────────────── */
+.ac-prio-pill {
+  font-size: .65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+}
+
+.prio-urgent {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.prio-high {
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
+}
+
+.prio-normal {
+  background: #f0f9ff;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+}
+
+.prio-low {
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+/* ── Due date pills ─────────────────────────────────────── */
+.ac-due-pill {
+  font-size: .65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+}
+
+.due-overdue {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.due-today {
+  background: #fefce8;
+  color: #ca8a04;
+  border: 1px solid #fde047;
+}
+
+.due-ok {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+/* ── Slider dot indicators ──────────────────────────────── */
+.ac-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: #cbd5e1;
+  padding: 0;
+  cursor: pointer;
+  transition: background .2s, transform .2s;
+}
+
+.ac-dot:hover {
+  background: #6366f1;
+}
+
+.ac-dot.active {
+  background: #6366f1;
+  transform: scale(1.35);
+}
+
+/* ── Slider toggle button ───────────────────────────────── */
+.ac-slider-toggle-btn {
+  font-size: .78rem;
+  font-weight: 600;
+  padding: .25rem .65rem;
+}
+
+/* ── Responsive column counts ───────────────────────────── */
+@media (max-width: 639px) {
+  .ac-member-col {
+    flex: 0 0 100% !important;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 899px) {
+  .ac-member-col {
+    flex: 0 0 50% !important;
+  }
+}
+
+@media (min-width: 900px) and (max-width: 1199px) {
+  .ac-member-col {
+    flex: 0 0 33.33% !important;
+  }
+}
