@@ -852,6 +852,56 @@ body {
 .acx-mini-title { font-size: .84rem; font-weight: 600; color: #334155; }
 .acx-mini-meta { font-size: .72rem; color: #64748b; }
 
+/* Clean color theme for AC Projects + AC Clients */
+#ac-projects-list .ac-project-section {
+  border: 1px solid #dbeafe !important;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 16px rgba(30, 64, 175, .08) !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
+}
+
+#ac-projects-list .ac-project-section:nth-child(3n + 1) { border-color: #bfdbfe !important; }
+#ac-projects-list .ac-project-section:nth-child(3n + 2) { border-color: #c7d2fe !important; }
+#ac-projects-list .ac-project-section:nth-child(3n + 3) { border-color: #bae6fd !important; }
+
+#ac-projects-list .ac-project-section .badge {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
+}
+
+#ac-projects-list .ac-project-section .btn-outline-primary,
+#ac-clients-list .btn-outline-primary {
+  border-color: #93c5fd;
+  color: #1d4ed8;
+  background: #f8fbff;
+}
+#ac-projects-list .ac-project-section .btn-outline-primary:hover,
+#ac-clients-list .btn-outline-primary:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+}
+
+#ac-clients-list > section {
+  border: 1px solid #dbeafe !important;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .06) !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
+}
+
+#ac-clients-list > section:nth-child(2n) {
+  border-color: #ddd6fe !important;
+  background: linear-gradient(180deg, #ffffff 0%, #faf5ff 100%) !important;
+}
+
+#ac-clients-list .acx-mini-item {
+  border-radius: 12px;
+  border: 1px solid #dbeafe;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(30, 64, 175, .05);
+}
+
 /* ── Responsive column counts ───────────────────────────── */
 @media (max-width: 639px) {
   .ac-member-col {

@@ -2,7 +2,7 @@
 <div class="report-topbar mb-3">
   <div class="report-top-left">
     <span class="report-top-icon">🧭</span>
-    <span class="report-top-title">Pending Tasks</span>
+    <span class="report-top-title">All Tasks</span>
     <span class="report-top-pill" id="pending-total">—</span>
   </div>
   <div class="report-top-right">

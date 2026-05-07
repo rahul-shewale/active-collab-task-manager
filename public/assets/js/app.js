@@ -68,17 +68,47 @@ function refreshSyncStatus() {
 
 /* ── App namespace ────────────────────────────────────────── */
 const App = {
-  currentTab: 'report',
+  currentTab: 'pending',
+  _tabRotateTimer: null,
+  _tabOrder: ['pending', 'ac-members', 'report', 'ac-projects', 'ac-managers', 'ac-clients'],
+
+  getTabDurationMs(tab) {
+    // 4 min: All Tasks (pending), AC Members, Trello Task Report
+    // 2 min: remaining tabs
+    if (tab === 'pending' || tab === 'ac-members' || tab === 'report') return 4 * 60 * 1000;
+    return 2 * 60 * 1000;
+  },
+
+  getNextTab(currentTab) {
+    const idx = this._tabOrder.indexOf(currentTab);
+    if (idx < 0) return this._tabOrder[0];
+    return this._tabOrder[(idx + 1) % this._tabOrder.length];
+  },
+
+  scheduleTabRotation() {
+    clearTimeout(this._tabRotateTimer);
+    const waitMs = this.getTabDurationMs(this.currentTab);
+    this._tabRotateTimer = setTimeout(() => {
+      const next = this.getNextTab(this.currentTab);
+      this.showTab(next);
+    }, waitMs);
+  },
+
+  stopTabRotation() {
+    clearTimeout(this._tabRotateTimer);
+    this._tabRotateTimer = null;
+  },
 
   showPage(page) {
     $('#login-page, #dashboard-page').addClass('d-none');
     if (page === 'login') {
+      this.stopTabRotation();
       $('#login-page').removeClass('d-none');
     } else {
       $('#dashboard-page').removeClass('d-none');
       const user = JSON.parse(localStorage.getItem('auth_user') || '{}');
       $('#nav-user').text(user.name || '');
-      this.showTab('report');
+      this.showTab('pending');
       refreshSyncStatus();
     }
   },
@@ -100,6 +130,8 @@ const App = {
       'ac-clients':   () => AcClients.load(),
     };
     if (loaders[tab]) loaders[tab]();
+
+    this.scheduleTabRotation();
   },
 
   reloadCurrentTab() {

@@ -59,8 +59,8 @@ Bootstrap::init();
 
       <div class="collapse navbar-collapse" id="nav-tabs">
         <ul class="navbar-nav me-auto gap-1 mt-2 mt-lg-0" id="main-tabs">
-          <li class="nav-item"><a class="nav-link tab-link active" href="#" data-tab="report">📊 Task Report</a></li>
-          <li class="nav-item"><a class="nav-link tab-link" href="#" data-tab="pending">🧭 Pending Sliders</a></li>
+          <li class="nav-item"><a class="nav-link tab-link active" href="#" data-tab="report">📊 Trello Task Report</a></li>
+          <li class="nav-item"><a class="nav-link tab-link" href="#" data-tab="pending">🧭 All Tasks</a></li>
           <li class="nav-item"><a class="nav-link tab-link" href="#" data-tab="ac-members">👥 AC Members</a></li>
           <li class="nav-item"><a class="nav-link tab-link" href="#" data-tab="ac-projects">📂 AC Projects</a></li>
           <li class="nav-item"><a class="nav-link tab-link" href="#" data-tab="ac-managers">🧑‍💼 AC Managers</a></li>
