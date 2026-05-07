@@ -6,14 +6,24 @@
 const AcManagers = {
   loaded: false,
   data: [],
+  filtered: [],
+  _idx: 0,
+  _timer: null,
+  _running: false,
+  _visible: 3,
 
   load(force = false) {
-    if (this.loaded && !force) return;
+    if (this.loaded && !force) {
+      if (this.data.length) this.render(this.data);
+      return;
+    }
     this.loaded = true;
 
     $('#ac-managers-loading').removeClass('d-none');
-    $('#ac-managers-list').empty();
+    $('#ac-managers-track').empty();
+    $('#ac-managers-dots').empty();
     $('#ac-managers-error').addClass('d-none');
+    this.stop();
 
     acFetch('ac_managers', API.acManagers, force)
       .done(data => {
@@ -30,22 +40,26 @@ const AcManagers = {
 
   render(data) {
     const search = $('#ac-managers-search').val().toLowerCase();
-    const filtered = search
+    this.filtered = search
       ? data.filter(g => g.manager.name.toLowerCase().includes(search))
       : data;
 
-    if (!filtered.length) {
-      $('#ac-managers-list').html('<div class="text-muted py-4 text-center">No managers match your search.</div>');
+    const $track = $('#ac-managers-track');
+    const $dots = $('#ac-managers-dots');
+    $track.empty();
+    $dots.empty();
+    this.stop();
+
+    if (!this.filtered.length) {
+      $track.html('<div class="text-muted py-4 text-center w-100">No managers match your search.</div>');
       return;
     }
 
-    const html = filtered.map(({ manager, projects }) => {
+    this.filtered.forEach(({ manager, projects }, idx) => {
       const pal = seedColor(manager.id);
       const ini = initials(manager.name);
 
-      if (!projects.length) return '';
-
-      const projectCards = projects.map(p => {
+      const projectCards = (projects || []).map(p => {
         const viewLink = p.url
           ? `<a href="https://designer.edeveloperz.com${p.url}" target="_blank" class="btn btn-sm btn-outline-primary">View ↗</a>`
           : '';
@@ -54,39 +68,88 @@ const AcManagers = {
           : '';
 
         return `
-          <div class="col-md-6 col-lg-4">
-            <div class="card border-0 shadow-sm rounded-3 h-100" style="border-left:3px solid ${pal.dot}!important">
-              <div class="card-body py-2 px-3">
-                <div class="d-flex align-items-start justify-content-between gap-2">
-                  <div class="fw-semibold small flex-grow-1" style="color:${pal.text}">${escHtml(p.name)}</div>
-                  ${viewLink}
-                </div>
-                <div class="mt-1">
-                  <span class="badge bg-light text-dark border">${p.task_count} tasks</span>
-                  ${billable}
-                </div>
-              </div>
+          <div class="acx-mini-item">
+            <div class="d-flex align-items-start justify-content-between gap-2">
+              <div class="acx-mini-title">${escHtml(p.name)}</div>
+              ${viewLink}
+            </div>
+            <div class="acx-mini-meta mt-1">
+              <span>${p.task_count} tasks</span>
+              ${billable}
             </div>
           </div>`;
       }).join('');
 
-      return `
-        <section class="mb-4">
-          <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-2" style="background:${pal.bg};border:2px solid ${pal.border}">
+      $track.append(`
+        <div class="acx-col">
+          <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-0" style="background:${pal.bg};border:2px solid ${pal.border}">
             <div class="ac-manager-avatar" style="background:${pal.avatar}">${ini}</div>
             <div class="fw-bold flex-grow-1" style="color:${pal.text}">${escHtml(manager.name)}</div>
             <span class="badge rounded-pill" style="background:${pal.dot}">${projects.length} project${projects.length !== 1 ? 's' : ''}</span>
           </div>
-          <div class="row g-2">${projectCards}</div>
-        </section>`;
-    }).join('');
+          <div class="ac-col-body">
+            <div class="acx-mini-list">${projectCards || '<div class="ac-no-tasks">No projects</div>'}</div>
+          </div>
+        </div>
+      `);
+      $dots.append(`<button class="acx-dot${idx===0?' active':''}" data-idx="${idx}"></button>`);
+    });
 
-    $('#ac-managers-list').html(html || '<div class="text-muted py-4 text-center">No managers with projects found.</div>');
+    this._idx = 0;
+    this._visible = this.calcVisible();
+    this.apply(false);
+    this.start();
   },
+
+  calcVisible() {
+    const w = $('#ac-managers-slider-wrap').width();
+    if (w >= 1200) return 4;
+    if (w >= 900) return 3;
+    if (w >= 640) return 2;
+    return 1;
+  },
+  maxIdx() { return Math.max(0, this.filtered.length - this._visible); },
+  apply(animate = true) {
+    const colW = 100 / this._visible;
+    $('#ac-managers-track .acx-col').css('flex', `0 0 ${colW}%`);
+    $('#ac-managers-track').css('transition', animate ? 'transform 0.45s cubic-bezier(.4,0,.2,1)' : 'none');
+    $('#ac-managers-track').css('transform', `translateX(-${this._idx * colW}%)`);
+    $('#ac-managers-dots .acx-dot').removeClass('active');
+    $(`#ac-managers-dots .acx-dot[data-idx="${this._idx}"]`).addClass('active');
+  },
+  goTo(i) { this._idx = Math.max(0, Math.min(i, this.maxIdx())); this.apply(true); },
+  next() { this.goTo(this._idx >= this.maxIdx() ? 0 : this._idx + 1); },
+  prev() { this.goTo(this._idx <= 0 ? this.maxIdx() : this._idx - 1); },
+  start() {
+    this.stop();
+    this._running = true;
+    $('#ac-managers-toggle').html('<i class="bi bi-pause-fill"></i> <span>Pause</span>').removeClass('btn-outline-secondary').addClass('btn-primary');
+    this._timer = setInterval(() => this.next(), 2000);
+  },
+  stop() {
+    clearInterval(this._timer);
+    this._timer = null;
+    this._running = false;
+    $('#ac-managers-toggle').html('<i class="bi bi-play-fill"></i> <span>Play</span>').removeClass('btn-primary').addClass('btn-outline-secondary');
+  },
+  toggle() { this._running ? this.stop() : this.start(); },
 };
 
 $(document).on('input', '#ac-managers-search', function () {
   AcManagers.render(AcManagers.data);
+});
+$(document)
+  .on('click', '#ac-managers-prev', () => { AcManagers.stop(); AcManagers.prev(); })
+  .on('click', '#ac-managers-next', () => { AcManagers.stop(); AcManagers.next(); })
+  .on('click', '#ac-managers-toggle', () => AcManagers.toggle())
+  .on('click', '#ac-managers-dots .acx-dot', function () { AcManagers.stop(); AcManagers.goTo(+$(this).data('idx')); })
+  .on('mouseenter', '#ac-managers-slider-wrap', () => AcManagers.stop())
+  .on('mouseleave', '#ac-managers-slider-wrap', () => { if (!AcManagers._running) AcManagers.start(); });
+
+$(window).on('resize', () => {
+  if (!AcManagers.filtered.length) return;
+  AcManagers._visible = AcManagers.calcVisible();
+  AcManagers.apply(false);
 });
 
 $(document).on('click', '#ac-managers-reload', function () {

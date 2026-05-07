@@ -27,7 +27,7 @@ class PendingController
 
         $rows = DB::fetchAll(
             "SELECT
-                u.id   AS user_id,
+                COALESCE(tu.user_id, t.assigned_to) AS user_id,
                 u.name AS user_name,
                 u.email AS user_email,
                 u.avatar AS user_avatar,
@@ -41,7 +41,7 @@ class PendingController
                 t.url
              FROM tasks t
              LEFT JOIN task_user tu ON tu.task_id = t.id
-             LEFT JOIN users u ON u.id = tu.user_id
+             LEFT JOIN users u ON u.id = COALESCE(tu.user_id, t.assigned_to)
              WHERE t.source = 'trello'
                AND t.status IN ('open','in_progress')
              ORDER BY
@@ -52,17 +52,71 @@ class PendingController
                t.updated_at DESC"
         );
 
+        // Person inference fallback for Trello lists.
+        // We can't rely on `users` having all Trello people populated.
+        $boardFilters = [
+            'leaddetector'  => ['Pending list', 'rahul', 'manish', 'shifa', 'sandesh', 'vedant'],
+            'Minute Pages'  => ['Pending emails', 'manish nadar', 'rahul', 'sandesh', 'shifa', 'vedant'],
+            'RocketSkip'    => ['Pending list', 'manish nadar', 'rahul', 'sandesh', 'shifa', 'vedant'],
+            'S@geWorkspace' => ['Changes from client'],
+        ];
+
+        $isGenericList = function (string $list) : bool {
+            $l = strtolower($list);
+            return str_contains($l, 'pending list') ||
+                   str_contains($l, 'pending emails') ||
+                   str_contains($l, 'changes from client');
+        };
+
+        $inferPseudoUserName = function (array $r) use ($boardFilters, $isGenericList) : ?string {
+            $boardName = strtolower((string) ($r['board_name'] ?? ''));
+            $listName  = strtolower((string) ($r['list_name'] ?? ''));
+
+            $allowedLists = null;
+            foreach ($boardFilters as $key => $listNames) {
+                if (stripos($boardName, $key) !== false) {
+                    $allowedLists = $listNames;
+                    break;
+                }
+            }
+            if ($allowedLists === null) return null;
+
+            foreach ($allowedLists as $candidate) {
+                if ($isGenericList((string) $candidate)) continue;
+                $candLower = strtolower((string) $candidate);
+                if ($candLower === '') continue;
+
+                // list names are often exactly the person name
+                if (str_contains($listName, $candLower) || str_contains($candLower, $listName)) {
+                    return ucwords($candLower);
+                }
+            }
+
+            return null;
+        };
+
         $grouped = [];
         $unassignedKey = '__unassigned__';
         foreach ($rows as $r) {
-            $uid = $r['user_id'] ? (int) $r['user_id'] : $unassignedKey;
-            if (!isset($grouped[$uid])) {
-                $grouped[$uid] = [
-                    'user' => $uid === $unassignedKey
+            $uid = $r['user_id'] ? (int) $r['user_id'] : null;
+            $groupKey = $uid;
+            $pseudoName = null;
+
+            if (!$uid) {
+                $pseudoName = $inferPseudoUserName($r);
+                if ($pseudoName) {
+                    $groupKey = '__inferred__:' . strtolower($pseudoName);
+                } else {
+                    $groupKey = $unassignedKey;
+                }
+            }
+            if (!isset($grouped[$groupKey])) {
+                $grouped[$groupKey] = [
+                    'user' => $groupKey === $unassignedKey
                         ? ['id' => 0, 'name' => 'Unassigned', 'email' => null, 'avatar' => null]
                         : [
-                            'id'     => (int) $r['user_id'],
-                            'name'   => $r['user_name'] ?? 'Unknown',
+                            'id'     => $r['user_id'] ? (int) $r['user_id'] : 0,
+                            'name'   => $pseudoName ?? ($r['user_name'] ?? 'Unknown'),
                             'email'  => $r['user_email'] ?? null,
                             'avatar' => $r['user_avatar'] ?? null,
                         ],
@@ -70,7 +124,7 @@ class PendingController
                 ];
             }
 
-            $grouped[$uid]['tasks'][] = [
+            $grouped[$groupKey]['tasks'][] = [
                 'id'           => (int) $r['task_id'],
                 'title'        => $r['title'] ?? '',
                 'status'       => $r['status'] ?? 'open',

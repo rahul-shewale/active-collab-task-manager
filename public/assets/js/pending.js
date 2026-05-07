@@ -13,6 +13,15 @@ function initials2(name) {
   return (name || '?').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 }
 
+function cleanDisplayName(name) {
+  const raw = String(name || '').trim();
+  if (!raw) return '';
+  return raw
+    .replace(/\b(LeadDetector|Minute\s*Pages?|RocketSkip|S@geWorkspace|S@geWork)\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 function pendingTaskCard(task) {
   const openBtn = task.url
     ? `<a href="${escHtml2(task.url)}" target="_blank" rel="noopener" class="ac-card-link" title="Open">↗</a>`
@@ -117,11 +126,12 @@ function createPendingSlider(cfg) {
 
     state.filtered.forEach((group, idx) => {
       const u = group?.user || {};
+      const displayName = cleanDisplayName(u.name || 'Unknown') || 'Unknown';
       const tasks = Array.isArray(group?.tasks) ? group.tasks : [];
 
       const avatarHtml = u.avatar
-        ? `<img src="${escHtml2(u.avatar)}" class="rounded-circle" width="44" height="44" alt="${escHtml2(u.name)}">`
-        : `<div class="ac-col-avatar">${escHtml2(initials2(u.name))}</div>`;
+        ? `<img src="${escHtml2(u.avatar)}" class="rounded-circle" width="44" height="44" alt="${escHtml2(displayName)}">`
+        : `<div class="ac-col-avatar">${escHtml2(initials2(displayName))}</div>`;
 
       const preview = tasks.slice(0, state.taskPreview).map(pendingTaskCard).join('');
       const moreBtn = tasks.length > state.taskPreview
@@ -133,7 +143,7 @@ function createPendingSlider(cfg) {
           <div class="ac-col-header">
             <div class="ac-col-avatar-wrap">${avatarHtml}</div>
             <div class="ac-col-meta">
-              <div class="ac-col-name">${escHtml2(u.name || 'Unknown')}</div>
+              <div class="ac-col-name">${escHtml2(displayName)}</div>
               <div class="ac-col-sub">${escHtml2(u.email || '')}</div>
             </div>
             <span class="ac-col-badge">${tasks.length}</span>
@@ -145,7 +155,7 @@ function createPendingSlider(cfg) {
         </div>
       `);
 
-      $dots.append(`<button class="ac-dot${idx===0?' active':''}" data-dot="${idx}" title="${escHtml2(u.name||'')}"></button>`);
+      $dots.append(`<button class="ac-dot${idx===0?' active':''}" data-dot="${idx}" title="${escHtml2(displayName)}"></button>`);
     });
 
     state.idx = 0;

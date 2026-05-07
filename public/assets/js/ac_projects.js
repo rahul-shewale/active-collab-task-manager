@@ -22,22 +22,25 @@ const AcProjects = {
         }
 
         const html = data.map(group => {
-          const p = group.project;
+          const p = group.project || {};
+          const tasks = Array.isArray(group.tasks) ? group.tasks : [];
           const viewLink = p.url
-            ? `<a href="https://designer.edeveloperz.com${p.url}" target="_blank" class="btn btn-sm btn-outline-primary ms-auto">View ↗</a>`
+            ? `<a href="https://designer.edeveloperz.com${p.url}" target="_blank" class="btn btn-sm btn-outline-primary">View ↗</a>`
             : '';
 
-          const tasks = (group.tasks || []).map(task => acTaskCard(task, false)).join('');
-
           return `
-            <section class="ac-project-section mb-4">
-              <div class="d-flex align-items-center gap-2 mb-2 p-3 rounded-3 bg-white shadow-sm">
-                <span class="fs-5">📂</span>
-                <div class="fw-bold flex-grow-1">${escHtml(p.name)}</div>
-                <span class="badge bg-secondary rounded-pill">${group.tasks.length} task${group.tasks.length !== 1 ? 's' : ''}</span>
+            <section class="ac-project-section mb-3 bg-white border rounded-3 shadow-sm p-3">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="fs-6">📂</span>
+                <div class="fw-bold flex-grow-1">${escHtml(p.name || 'Project')}</div>
+                <span class="badge bg-light text-dark border">${tasks.length} task${tasks.length !== 1 ? 's' : ''}</span>
                 ${viewLink}
               </div>
-              <div class="ac-task-grid row g-2">${tasks}</div>
+              <div class="row g-2">
+                ${tasks.length
+                  ? tasks.slice(0, 12).map(task => `<div class="col-md-6 col-xl-4">${acTaskCard(task, false)}</div>`).join('')
+                  : '<div class="text-muted small">No open tasks</div>'}
+              </div>
             </section>`;
         }).join('');
 

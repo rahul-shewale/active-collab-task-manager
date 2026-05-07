@@ -124,8 +124,16 @@ body {
 }
 
 .list-name {
-  font-size: .65rem;
-  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  padding: .12rem .5rem;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .01em;
+  color: #5b21b6;
+  background: #ede9fe;
+  border: 1px solid #c4b5fd;
 }
 
 .due-badge {
@@ -804,6 +812,45 @@ body {
   font-weight: 600;
   padding: .25rem .65rem;
 }
+
+/* Generic sliders for AC projects/managers/clients */
+.acx-slider-wrap {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.acx-slider-track {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  will-change: transform;
+}
+
+.acx-col {
+  flex: 0 0 33.3333%;
+  padding: 0 6px;
+  box-sizing: border-box;
+}
+
+.acx-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: #cbd5e1;
+  padding: 0;
+  cursor: pointer;
+  transition: background .2s, transform .2s;
+}
+
+.acx-dot:hover { background: #6366f1; }
+.acx-dot.active { background: #6366f1; transform: scale(1.35); }
+
+.acx-mini-list { display: flex; flex-direction: column; gap: 8px; }
+.acx-mini-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 10px; }
+.acx-mini-title { font-size: .84rem; font-weight: 600; color: #334155; }
+.acx-mini-meta { font-size: .72rem; color: #64748b; }
 
 /* ── Responsive column counts ───────────────────────────── */
 @media (max-width: 639px) {

@@ -43,35 +43,31 @@ const AcClients = {
       const pal = seedColor(client.id);
       const ini = (client.name || '?').split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
 
-      const projectCards = projects.map(p => {
+      const projectCards = (projects || []).map(p => {
         const viewLink = p.url
           ? `<a href="https://designer.edeveloperz.com${p.url}" target="_blank" class="btn btn-sm btn-outline-primary">View ↗</a>`
           : '';
 
         return `
-          <div class="col-md-6 col-lg-4">
-            <div class="card border-0 shadow-sm rounded-3 h-100" style="border-left:3px solid ${pal.dot}!important">
-              <div class="card-body py-2 px-3">
-                <div class="d-flex align-items-start justify-content-between gap-2">
-                  <div class="fw-semibold small flex-grow-1" style="color:${pal.text}">${escHtml(p.name)}</div>
-                  ${viewLink}
-                </div>
-                <div class="mt-1">
-                  <span class="badge bg-light text-dark border">${p.task_count} tasks</span>
-                </div>
-              </div>
+          <div class="acx-mini-item">
+            <div class="d-flex align-items-start justify-content-between gap-2">
+              <div class="acx-mini-title">${escHtml(p.name)}</div>
+              ${viewLink}
             </div>
+            <div class="acx-mini-meta mt-1">${p.task_count} tasks</div>
           </div>`;
       }).join('');
 
       return `
-        <section class="mb-4">
-          <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-2" style="background:${pal.bg};border:2px solid ${pal.border}">
+        <section class="mb-3 border rounded-3 bg-white shadow-sm p-3">
+          <div class="d-flex align-items-center gap-3 p-2 rounded-3 mb-2" style="background:${pal.bg};border:1px solid ${pal.border}">
             <div class="ac-manager-avatar" style="background:${pal.dot}">${ini}</div>
             <div class="fw-bold flex-grow-1" style="color:${pal.text}">${escHtml(client.name)}</div>
             <span class="badge rounded-pill" style="background:${pal.dot}">${projects.length} project${projects.length !== 1 ? 's' : ''}</span>
           </div>
-          <div class="row g-2">${projectCards}</div>
+          <div class="row g-2">
+            ${projectCards || '<div class="text-muted small px-2">No projects</div>'}
+          </div>
         </section>`;
     }).join('');
 

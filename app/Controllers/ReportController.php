@@ -45,6 +45,14 @@ class ReportController
     public function dueDateStats(Request $request): void
     {
         $today = date('Y-m-d');
+        // Person inference fallback for Trello lists.
+        // We can't rely on `users` having all Trello people populated.
+        $boardFilters = [
+            'leaddetector'  => ['Pending list', 'rahul', 'manish', 'shifa', 'sandesh', 'vedant'],
+            'Minute Pages'  => ['Pending emails', 'manish nadar', 'rahul', 'sandesh', 'shifa', 'vedant'],
+            'RocketSkip'    => ['Pending list', 'manish nadar', 'rahul', 'sandesh', 'shifa', 'vedant'],
+            'S@geWorkspace' => ['Changes from client'],
+        ];
 
         $tasks = DB::fetchAll(
             "SELECT t.*, GROUP_CONCAT(u.name ORDER BY u.name SEPARATOR ',') AS programmers
@@ -68,6 +76,47 @@ class ReportController
                 'programmers'=> $t['programmers'] ? explode(',', $t['programmers']) : [],
             ], $tasks);
         };
+
+        $isGenericList = function (string $list) : bool {
+            $l = strtolower($list);
+            return str_contains($l, 'pending list') ||
+                   str_contains($l, 'pending emails') ||
+                   str_contains($l, 'changes from client');
+        };
+
+        foreach ($tasks as &$task) {
+            if (!empty($task['programmers'])) continue;
+
+            $boardName = strtolower((string) ($task['board_name'] ?? ''));
+            $listName  = strtolower((string) ($task['list_name'] ?? ''));
+
+            $allowedLists = null;
+            foreach ($boardFilters as $key => $listNames) {
+                if (stripos($boardName, $key) !== false) {
+                    $allowedLists = $listNames;
+                    break;
+                }
+            }
+            if ($allowedLists === null) continue;
+
+            $inferred = [];
+            foreach ($allowedLists as $candidate) {
+                if ($isGenericList((string) $candidate)) continue;
+                if ($candidate === '') continue;
+
+                $candLower = strtolower($candidate);
+                // Match list name to person token (e.g. "Shifa", "Manish Nadar", etc).
+                if ($candLower !== '' && (str_contains($listName, $candLower) || str_contains($candLower, $listName))) {
+                    $inferred[] = ucwords($candLower);
+                }
+            }
+
+            $inferred = array_values(array_unique($inferred));
+            if (!empty($inferred)) {
+                $task['programmers'] = implode(',', $inferred);
+            }
+        }
+        unset($task);
 
         $pending  = array_filter($tasks, fn($t) => $t['due_date'] && $t['due_date'] < $today);
         $todayArr = array_filter($tasks, fn($t) => $t['due_date'] === $today);

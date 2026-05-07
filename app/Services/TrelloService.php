@@ -27,6 +27,14 @@ class TrelloService
     {
         $synced = 0;
         $errors = [];
+        $assignmentStats = [
+            'cards_processed' => 0,
+            'assigned' => 0,
+            'unassigned' => 0,
+            'via_member' => 0,
+            'via_mention' => 0,
+            'via_email' => 0,
+        ];
 
         $boards = $this->getBoards();
         $filteredBoards = array_filter($boards, function ($board) {
@@ -49,6 +57,7 @@ class TrelloService
             $handles["cards_{$bid}"]      = $this->buildCurl("/boards/{$bid}/cards", ['filter' => 'open', 'fields' => 'id,name,desc,due,idMembers,idList,shortUrl,labels,dateLastActivity,closed']);
             $handles["lists_{$bid}"]      = $this->buildCurl("/boards/{$bid}/lists");
             $handles["checklists_{$bid}"] = $this->buildCurl("/boards/{$bid}/checklists");
+            $handles["actions_{$bid}"]    = $this->buildCurl("/boards/{$bid}/actions", ['filter' => 'commentCard', 'limit' => 500]);
         }
 
         foreach ($handles as $ch) curl_multi_add_handle($multiHandle, $ch);
@@ -67,18 +76,72 @@ class TrelloService
         }
         curl_multi_close($multiHandle);
 
-        // Build member map: Trello member_id -> local user
-        $users = DB::fetchAll('SELECT id, trello_member_id FROM users WHERE trello_member_id IS NOT NULL');
+        // Build user maps once to avoid per-card queries.
+        $users = DB::fetchAll('SELECT id, trello_member_id, email, name FROM users');
         $memberMap = [];
-        foreach ($users as $u) $memberMap[$u['trello_member_id']] = $u['id'];
+        $emailMap = [];
+        $usernameMap = [];
+        $namePrefixMap = [];
+        foreach ($users as $u) {
+            if (!empty($u['trello_member_id'])) {
+                $memberMap[$u['trello_member_id']] = (int) $u['id'];
+            }
+            $email = strtolower(trim((string) ($u['email'] ?? '')));
+            if ($email !== '') {
+                $emailMap[$email] = (int) $u['id'];
+                $localPart = explode('@', $email)[0] ?? '';
+                if ($localPart !== '' && !isset($usernameMap[$localPart])) {
+                    $usernameMap[$localPart] = (int) $u['id'];
+                }
+            }
+
+            $name = strtolower(trim((string) ($u['name'] ?? '')));
+            if ($name !== '' && !isset($namePrefixMap[$name])) {
+                $namePrefixMap[$name] = (int) $u['id'];
+            }
+        }
 
         foreach ($filteredBoards as $board) {
             $bid   = $board['id'];
             $cards = $responses["cards_{$bid}"] ?? [];
             $lists = $responses["lists_{$bid}"] ?? [];
+            $checklists = $responses["checklists_{$bid}"] ?? [];
+            $actions = $responses["actions_{$bid}"] ?? [];
+            $boardStats = [
+                'board' => $board['name'] ?? $bid,
+                'cards_processed' => 0,
+                'assigned' => 0,
+                'unassigned' => 0,
+                'via_member' => 0,
+                'via_mention' => 0,
+                'via_email' => 0,
+            ];
 
             $listMap = [];
             foreach ($lists as $l) $listMap[$l['id']] = $l['name'];
+            $actionsByCard = [];
+            foreach ($actions as $action) {
+                $cardId = $action['data']['card']['id'] ?? null;
+                if (!$cardId) {
+                    continue;
+                }
+                if (!isset($actionsByCard[$cardId])) {
+                    $actionsByCard[$cardId] = [];
+                }
+                $actionsByCard[$cardId][] = $action;
+            }
+
+            $checklistsByCard = [];
+            foreach ($checklists as $checklist) {
+                $cardId = $checklist['idCard'] ?? null;
+                if (!$cardId) {
+                    continue;
+                }
+                if (!isset($checklistsByCard[$cardId])) {
+                    $checklistsByCard[$cardId] = [];
+                }
+                $checklistsByCard[$cardId][] = $checklist;
+            }
 
             // Determine allowed list names for this board
             $allowedLists = null;
@@ -100,6 +163,8 @@ class TrelloService
                     }
                     if (!$match) continue;
                 }
+                $assignmentStats['cards_processed']++;
+                $boardStats['cards_processed']++;
 
                 $priority = 'normal';
                 foreach ($card['labels'] ?? [] as $label) {
@@ -166,22 +231,108 @@ class TrelloService
                     $taskId = (int) DB::lastInsertId();
                 }
 
-                // Sync task-user pivot
-                DB::delete('task_user', 'task_id = ?', [$taskId]);
+                $targetUserIds = [];
+                $hasMemberMatch = false;
+                $hasMentionMatch = false;
+                $hasEmailMatch = false;
                 foreach ($card['idMembers'] ?? [] as $memberId) {
                     if (isset($memberMap[$memberId])) {
-                        try {
-                            DB::query(
-                                'INSERT IGNORE INTO task_user (task_id, user_id, created_at) VALUES (?, ?, NOW())',
-                                [$taskId, $memberMap[$memberId]]
-                            );
-                        } catch (\Throwable) {}
+                        $targetUserIds[] = $memberMap[$memberId];
+                        $hasMemberMatch = true;
                     }
                 }
 
+                $textContent = trim(($card['name'] ?? '') . ' ' . ($card['desc'] ?? ''));
+                foreach ($actionsByCard[$card['id']] ?? [] as $action) {
+                    $textContent .= ' ' . ($action['data']['text'] ?? '');
+                }
+                foreach ($checklistsByCard[$card['id']] ?? [] as $checklist) {
+                    foreach ($checklist['checkItems'] ?? [] as $item) {
+                        $textContent .= ' ' . ($item['name'] ?? '');
+                    }
+                }
+                $textContent = strtolower($textContent);
+
+                if (preg_match_all('/@([a-z0-9_\.]+)/i', $textContent, $mentionMatches)) {
+                    foreach (array_unique($mentionMatches[1]) as $username) {
+                        if (isset($usernameMap[$username])) {
+                            $targetUserIds[] = $usernameMap[$username];
+                            $hasMentionMatch = true;
+                            continue;
+                        }
+                        foreach ($namePrefixMap as $name => $userId) {
+                            if (str_starts_with($name, $username)) {
+                                $targetUserIds[] = $userId;
+                                $hasMentionMatch = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (preg_match_all('/[a-z0-9\._%+\-]+@[a-z0-9\.-]+\.[a-z]{2,}/i', $textContent, $emailMatches)) {
+                    foreach (array_unique($emailMatches[0]) as $email) {
+                        $email = strtolower($email);
+                        if (isset($emailMap[$email])) {
+                            $targetUserIds[] = $emailMap[$email];
+                            $hasEmailMatch = true;
+                        }
+                    }
+                }
+
+                // Fallback: infer assignee from list/title keywords like "rahul", "manish nadar", etc.
+                // This helps boards where Trello members are not mapped but lists are person-specific.
+                if (empty($targetUserIds)) {
+                    $keywordText = strtolower(trim(($listName ?? '') . ' ' . ($card['name'] ?? '')));
+                    foreach ($namePrefixMap as $name => $userId) {
+                        if ($name !== '' && str_contains($keywordText, $name)) {
+                            $targetUserIds[] = $userId;
+                            $hasMentionMatch = true;
+                            break;
+                        }
+                    }
+                }
+
+                $targetUserIds = array_values(array_unique($targetUserIds));
+                if (!empty($targetUserIds)) {
+                    $assignmentStats['assigned']++;
+                    $boardStats['assigned']++;
+                } else {
+                    $assignmentStats['unassigned']++;
+                    $boardStats['unassigned']++;
+                }
+                if ($hasMemberMatch) {
+                    $assignmentStats['via_member']++;
+                    $boardStats['via_member']++;
+                }
+                if ($hasMentionMatch) {
+                    $assignmentStats['via_mention']++;
+                    $boardStats['via_mention']++;
+                }
+                if ($hasEmailMatch) {
+                    $assignmentStats['via_email']++;
+                    $boardStats['via_email']++;
+                }
+
+                // Sync task-user pivot using trello members + mention/email extraction
+                DB::delete('task_user', 'task_id = ?', [$taskId]);
+                foreach ($targetUserIds as $userId) {
+                    try {
+                        DB::query(
+                            'INSERT IGNORE INTO task_user (task_id, user_id, created_at) VALUES (?, ?, NOW())',
+                            [$taskId, $userId]
+                        );
+                    } catch (\Throwable) {}
+                }
+                DB::update('tasks', ['assigned_to' => $targetUserIds[0] ?? null], 'id = ?', [$taskId]);
+
                 $synced++;
             }
+
+            error_log('TrelloService board assignment stats: ' . json_encode($boardStats));
         }
+
+        error_log('TrelloService sync assignment summary: ' . json_encode($assignmentStats));
 
         return ['synced' => $synced, 'errors' => $errors];
     }

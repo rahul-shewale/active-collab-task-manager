@@ -33,6 +33,15 @@ function fmtDate(d) {
   return d ? new Date(d).toLocaleDateString('en-IN', { day:'numeric', month:'short' }) : '';
 }
 
+function cleanMemberName(name) {
+  const raw = String(name || '').trim();
+  if (!raw) return '';
+  return raw
+    .replace(/\b(LeadDetector|Minute\s*Pages?|RocketSkip|S@geWorkspace|S@geWork)\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 function taskCard(task, showDue = true) {
   const board = shortBoard(task.board_name);
   const pal   = BOARD_PALETTE[board] || DEFAULT_PAL;
@@ -47,9 +56,11 @@ function taskCard(task, showDue = true) {
     dueBadge = `<span class="due-badge badge-neutral">No due date</span>`;
   }
 
-  const members = (task.programmers || []).map(n =>
-    `<span class="member-chip">${n}</span>`
-  ).join('');
+  const members = (task.programmers || [])
+    .map(cleanMemberName)
+    .filter(Boolean)
+    .map(n => `<span class="member-chip">${escHtml(n)}</span>`)
+    .join('');
 
   const openBtn = task.url
     ? `<a href="${task.url}" target="_blank" rel="noopener" class="btn btn-sm btn-trello">🔗 Open ↗</a>`
