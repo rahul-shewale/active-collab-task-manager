@@ -26,7 +26,7 @@ function apiRequest(method, url, data) {
     if (xhr.status === 401) {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
-      if (!window.location.hash.includes('login')) {
+      if (typeof App !== 'undefined' && App && typeof App.showPage === 'function' && !window.location.hash.includes('login')) {
         App.showPage('login');
       }
     }
