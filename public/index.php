@@ -11,7 +11,7 @@ Bootstrap::init();
   <title>Task Manager Dashboard</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
-  <link rel="stylesheet" href="/assets/css/app.css"/>
+  <link rel="stylesheet" href="/assets/css/app.css?v=20260513"/>
 </head>
 <body class="bg-light">
 
@@ -139,14 +139,14 @@ Bootstrap::init();
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-<script src="/assets/js/api.js"></script>
-<script src="/assets/js/ac_shared.js"></script>
-<script src="/assets/js/report.js"></script>
-<script src="/assets/js/pending.js"></script>
-<script src="/assets/js/ac_members.js"></script>
-<script src="/assets/js/ac_projects.js"></script>
-<script src="/assets/js/ac_managers.js"></script>
-<script src="/assets/js/ac_clients.js"></script>
-<script src="/assets/js/app.js"></script>
+<script src="/assets/js/api.js?v=20260513"></script>
+<script src="/assets/js/ac_shared.js?v=20260513"></script>
+<script src="/assets/js/report.js?v=20260513"></script>
+<script src="/assets/js/pending.js?v=20260513"></script>
+<script src="/assets/js/ac_members.js?v=20260513"></script>
+<script src="/assets/js/ac_projects.js?v=20260513"></script>
+<script src="/assets/js/ac_managers.js?v=20260513"></script>
+<script src="/assets/js/ac_clients.js?v=20260513"></script>
+<script src="/assets/js/app.js?v=20260513"></script>
 </body>
 </html>

@@ -172,6 +172,12 @@ function createPendingSlider(cfg) {
     $id(cfg.trackId).empty();
     stop();
 
+    if (typeof cfg.api !== 'function') {
+      $id(cfg.errorId).text('Pending API is not available. Please hard refresh (Ctrl+Shift+R).').removeClass('d-none');
+      $id(cfg.loadingId).addClass('d-none');
+      return;
+    }
+
     cfg.api()
       .done(d => {
         state.data = d;
